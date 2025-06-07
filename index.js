@@ -127,7 +127,6 @@ app.get('/api/generar-qr/:id', async (req, res) => {
 
     const inscripcion = doc.data();
 
-    // Asegurar que 'dias' sea array
     const dias = Array.isArray(inscripcion.dias)
       ? inscripcion.dias
       : String(inscripcion.dias).split(',').map(d => d.trim());
@@ -137,7 +136,7 @@ app.get('/api/generar-qr/:id', async (req, res) => {
       Email: ${inscripcion.email}
       Clase: ${inscripcion.clase}
       Turno: ${inscripcion.turno}
-      Días: ${dias.join(', ')}
+      Dias: ${dias.join(', ')}
       Fecha: ${inscripcion.fecha}
       Precio: $${inscripcion.precio}
       Registro: ${inscripcion.fechaRegistro}
