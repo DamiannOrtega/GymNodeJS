@@ -113,3 +113,41 @@ app.post('/api/generar-qr', async (req, res) => {
     res.status(500).json({ error: "No se pudo generar el código QR" });
   }
 });
+
+
+app.get('/api/generar-qr/:id', async (req, res) => {
+  const id = req.params.id;
+
+  try {
+    const doc = await db.collection('inscripciones').doc(id).get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ error: 'Inscripción no encontrada' });
+    }
+
+    const inscripcion = doc.data();
+
+    // Asegurar que 'dias' sea array
+    const dias = Array.isArray(inscripcion.dias)
+      ? inscripcion.dias
+      : String(inscripcion.dias).split(',').map(d => d.trim());
+
+    const contenidoQR = `
+      Nombre: ${inscripcion.nombre}
+      Email: ${inscripcion.email}
+      Clase: ${inscripcion.clase}
+      Turno: ${inscripcion.turno}
+      Días: ${dias.join(', ')}
+      Fecha: ${inscripcion.fecha}
+      Precio: $${inscripcion.precio}
+      Registro: ${inscripcion.fechaRegistro}
+    `;
+
+    const qr = await QRCode.toDataURL(contenidoQR);
+    res.json({ qr, datos: inscripcion }); // Devolver también los datos si los necesitas en el PDF
+
+  } catch (error) {
+    console.error('Error al generar QR desde Firebase:', error);
+    res.status(500).json({ error: 'Error al generar QR desde Firebase' });
+  }
+});
