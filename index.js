@@ -99,7 +99,7 @@ app.post('/api/generar-qr', async (req, res) => {
     Email: ${email}
     Clase: ${clase}
     Turno: ${turno}
-    Días: ${dias.join(', ')}
+    Dias: ${dias.join(', ')}
     Fecha: ${fecha}
     Precio: $${precio}
     Registrado: ${fechaRegistro}
