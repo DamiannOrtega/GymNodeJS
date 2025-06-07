@@ -88,35 +88,28 @@ app.listen(port, () => {
 
 //parte del codigo QR
 app.post('/api/generar-qr', async (req, res) => {
-  const {
-    nombre,
-    email,
-    clase,
-    turno,
-    dias = [],
-    fecha,
-    precio,
-    fechaRegistro
-  } = req.body;
+  const { nombre, email, clase, turno, fecha, precio, fechaRegistro } = req.body;
+  let dias = req.body.dias;
+
+  // Corregir si dias viene como string
+  dias = Array.isArray(dias) ? dias : String(dias).split(',').map(d => d.trim());
 
   const contenidoQR = `
-    Registro FitZone
-    ------------------------
     Nombre: ${nombre}
     Email: ${email}
     Clase: ${clase}
     Turno: ${turno}
     Días: ${dias.join(', ')}
-    Fecha de inicio: ${fecha}
+    Fecha: ${fecha}
     Precio: $${precio}
-    Registro: ${new Date(fechaRegistro).toLocaleString()}
+    Registrado: ${fechaRegistro}
   `;
 
   try {
-    const qrBase64 = await QRCode.toDataURL(contenidoQR);
-    res.status(200).json({ qr: qrBase64 });
+    const qr = await QRCode.toDataURL(contenidoQR);
+    res.json({ qr });
   } catch (error) {
-    console.error('Error al generar QR:', error);
-    res.status(500).json({ error: 'No se pudo generar el código QR' });
+    console.error("Error al generar QR:", error);
+    res.status(500).json({ error: "No se pudo generar el código QR" });
   }
 });
