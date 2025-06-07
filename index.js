@@ -2,7 +2,7 @@ const express = require("express");
 const admin = require("firebase-admin");  // Importar Firebase Admin SDK
 const nodemailer = require("nodemailer");
 const cors = require("cors");
-
+const QRCode = require('qrcode');
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -10,7 +10,7 @@ const port = process.env.PORT || 3000;
 const serviceAccount = require("./config/ServiceAccountKey.json");  // Ruta al archivo de credenciales
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://gymweb-2025.firebaseio.com"  // Reemplaza con el ID del proyecto (nombre principal)
+  databaseURL: "https://gymweb-2025.firebaseio.com"  
 });
 
 const db = admin.firestore();  // Acceder a Firestore
@@ -76,7 +76,47 @@ app.get('/', (req, res) => {
   res.send({ message: "Servidor funcionando" });
 });
 
+
+
+
+
 // Iniciar el servidor
 app.listen(port, () => {
   console.log(`Servidor ejecutándose en http://localhost:${port}`);
+});
+
+
+//parte del codigo QR
+app.post('/api/generar-qr', async (req, res) => {
+  const {
+    nombre,
+    email,
+    clase,
+    turno,
+    dias = [],
+    fecha,
+    precio,
+    fechaRegistro
+  } = req.body;
+
+  const contenidoQR = `
+    Registro FitZone
+    ------------------------
+    Nombre: ${nombre}
+    Email: ${email}
+    Clase: ${clase}
+    Turno: ${turno}
+    Días: ${dias.join(', ')}
+    Fecha de inicio: ${fecha}
+    Precio: $${precio}
+    Registro: ${new Date(fechaRegistro).toLocaleString()}
+  `;
+
+  try {
+    const qrBase64 = await QRCode.toDataURL(contenidoQR);
+    res.status(200).json({ qr: qrBase64 });
+  } catch (error) {
+    console.error('Error al generar QR:', error);
+    res.status(500).json({ error: 'No se pudo generar el código QR' });
+  }
 });
