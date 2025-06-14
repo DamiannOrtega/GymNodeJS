@@ -150,3 +150,39 @@ app.get('/api/generar-qr/:id', async (req, res) => {
     res.status(500).json({ error: 'Error al generar QR desde Firebase' });
   }
 });
+
+app.post('/api/enviar-codigo', async (req, res) => {
+  const { correo } = req.body;
+
+  if (!correo) {
+    return res.status(400).json({ ok: false, mensaje: 'Falta el correo' });
+  }
+
+  const codigo = Math.floor(100000 + Math.random() * 900000).toString();
+
+  try {
+    // Guarda en Firestore (colección: codigos)
+    await db.collection('codigos').doc(correo).set({
+      codigo,
+      timestamp: Date.now()
+    });
+
+    // Envia el código por correo
+    await transporter.sendMail({
+      from: 'FitZone <gymfitzone2025@gmail.com>',
+      to: correo,
+      subject: 'Código de recuperación de cuenta',
+      html: `
+        <h3>Tu código de recuperación es:</h3>
+        <p style="font-size: 24px; font-weight: bold;">${codigo}</p>
+        <p>Este código expirará en unos minutos por seguridad.</p>
+      `
+    });
+
+    res.status(200).json({ ok: true, mensaje: 'Código enviado correctamente' });
+
+  } catch (error) {
+    console.error('Error al enviar el código:', error);
+    res.status(500).json({ ok: false, mensaje: 'Error al enviar el código', error: error.message });
+  }
+});
