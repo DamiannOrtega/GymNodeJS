@@ -152,22 +152,45 @@ app.get('/api/generar-qr/:id', async (req, res) => {
 });
 
 app.post('/api/enviar-codigo', async (req, res) => {
-  const { correo } = req.body;
+  const { correo, usuario } = req.body;
 
-  if (!correo) {
-    return res.status(400).json({ ok: false, mensaje: 'Falta el correo' });
+  if (!correo || !usuario) {
+    return res.status(400).json({ ok: false, mensaje: 'Faltan datos' });
   }
 
-  const codigo = Math.floor(100000 + Math.random() * 900000).toString();
-
   try {
-    // Guarda en Firestore (colección: codigos)
+    const colecciones = ['usuarios', 'admins'];
+    let encontrado = null;
+
+    for (const col of colecciones) {
+      const snapshot = await db.collection(col)
+        .where('correo', '==', correo)
+        .where('usuario', '==', usuario)
+        .limit(1)
+        .get();
+
+      if (!snapshot.empty) {
+        encontrado = true;
+        break;
+      }
+    }
+
+    if (!encontrado) {
+      return res.status(404).json({
+        ok: false,
+        mensaje: '❌ No se encontró una cuenta con ese usuario y correo'
+      });
+    }
+
+    // Generar código y guardar
+    const codigo = Math.floor(100000 + Math.random() * 900000).toString();
+
     await db.collection('codigos').doc(correo).set({
       codigo,
       timestamp: Date.now()
     });
 
-    // Envia el código por correo
+    // Enviar correo
     await transporter.sendMail({
       from: 'FitZone <gymfitzone2025@gmail.com>',
       to: correo,
@@ -179,10 +202,11 @@ app.post('/api/enviar-codigo', async (req, res) => {
       `
     });
 
-    res.status(200).json({ ok: true, mensaje: 'Código enviado correctamente' });
+    return res.status(200).json({ ok: true, mensaje: 'Código enviado correctamente' });
 
   } catch (error) {
     console.error('Error al enviar el código:', error);
-    res.status(500).json({ ok: false, mensaje: 'Error al enviar el código', error: error.message });
+    return res.status(500).json({ ok: false, mensaje: 'Error en el servidor', error: error.message });
   }
 });
+
