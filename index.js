@@ -40,8 +40,8 @@ app.get('/api/admins', async (req, res) => {
 const transporter = nodemailer.createTransport({
   service: "gmail", // Se puede cambiar a otro proveedor (ej. Outlook, Yahoo)
   auth: {
-    user: "vivapinaycarlitos@gmail.com",
-    pass: "ohen cgif igag yivj"
+    user: "gymfitzone2025@gmail.com",
+    pass: "iwao brcb ooky mqti"
   }
 });
 
@@ -50,7 +50,7 @@ app.post('/api/enviar-correo', async (req, res) => {
   const { nombre, email, motivo, comentarios, respuesta } = req.body;
 
   const mailOptions = {
-    from: 'vivapinaycarlitos@gmail.com',
+    from: 'gymfitzone2025@gmail.com',
     to: email,
     subject: `Respuesta a tu mensaje: ${motivo}`,
     html: `
