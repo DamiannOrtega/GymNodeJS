@@ -182,10 +182,27 @@ app.post('/api/enviar-codigo', async (req, res) => {
       });
     }
 
-    // Generar código y guardar
+    // Revisar si ya existe un código reciente
+    const docRef = db.collection('codigos').doc(correo);
+    const existing = await docRef.get();
+
+    if (existing.exists) {
+      const data = existing.data();
+      const ahora = Date.now();
+      const haceMenosDe5Min = ahora - data.timestamp < 5 * 60 * 1000;
+
+      if (haceMenosDe5Min) {
+        return res.status(429).json({
+          ok: false,
+          mensaje: '⚠️ Ya se envió un código recientemente. Espera unos minutos.'
+        });
+      }
+    }
+
+    // Generar nuevo código y guardar
     const codigo = Math.floor(100000 + Math.random() * 900000).toString();
 
-    await db.collection('codigos').doc(correo).set({
+    await docRef.set({
       codigo,
       timestamp: Date.now()
     });
@@ -202,7 +219,7 @@ app.post('/api/enviar-codigo', async (req, res) => {
       `
     });
 
-    return res.status(200).json({ ok: true, mensaje: 'Código enviado correctamente' });
+    return res.status(200).json({ ok: true, mensaje: '📩 Código enviado correctamente' });
 
   } catch (error) {
     console.error('Error al enviar el código:', error);
