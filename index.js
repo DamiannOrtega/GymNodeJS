@@ -7,7 +7,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Configurar Firebase Admin
-const serviceAccount = require("./config/ServiceAccountKey.json");  // Ruta al archivo de credenciales
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT); // Ruta al archivo de credenciales
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: "https://gymweb-2025.firebaseio.com"  
